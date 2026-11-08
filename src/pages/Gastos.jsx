@@ -10,6 +10,12 @@ import {
   FaWallet,
 } from "react-icons/fa";
 
+import {
+  listarProdutos,
+  obterConfig,
+  salvarOrcamento as salvarOrcamentoApi,
+} from "../services/api";
+
 function Gastos() {
   const [produtos, setProdutos] = useState([]);
   const [filtroCategoria, setFiltroCategoria] = useState("Todos");
@@ -18,10 +24,7 @@ function Gastos() {
   // ORÇAMENTO
   // =========================================================
 
-  const [orcamento, setOrcamento] = useState(() => {
-    const valorSalvo = localStorage.getItem("orcamentoCasa");
-    return valorSalvo ? Number(valorSalvo) : 0;
-  });
+  const [orcamento, setOrcamento] = useState(0);
 
   const [mostrarOrcamentoForm, setMostrarOrcamentoForm] = useState(false);
   const [novoOrcamento, setNovoOrcamento] = useState("");
@@ -31,26 +34,13 @@ function Gastos() {
   // =========================================================
 
   useEffect(() => {
-    const produtosSalvos = localStorage.getItem("produtos");
+    listarProdutos()
+      .then(setProdutos)
+      .catch((erro) => console.error("Erro ao carregar produtos:", erro));
 
-    if (!produtosSalvos) {
-      setProdutos([]);
-      return;
-    }
-
-    try {
-      const produtosConvertidos = JSON.parse(produtosSalvos);
-
-      setProdutos(
-        produtosConvertidos.map((produto) => ({
-          ...produto,
-          quantidade: Number(produto.quantidade) || 1,
-        }))
-      );
-    } catch (error) {
-      console.error("Erro ao carregar produtos:", error);
-      setProdutos([]);
-    }
+    obterConfig()
+      .then((config) => setOrcamento(config.orcamento))
+      .catch((erro) => console.error("Erro ao carregar orçamento:", erro));
   }, []);
 
   // =========================================================
@@ -129,7 +119,7 @@ function Gastos() {
   // SALVAR ORÇAMENTO
   // =========================================================
 
-  function salvarOrcamento(event) {
+  async function salvarOrcamento(event) {
     event.preventDefault();
 
     const valor = Number(novoOrcamento);
@@ -139,16 +129,13 @@ function Gastos() {
       return;
     }
 
-    setOrcamento(valor);
-
-    localStorage.setItem(
-      "orcamentoCasa",
-      String(valor)
-    );
-
-    window.dispatchEvent(
-      new Event("larflow-data-updated")
-    );
+    try {
+      const config = await salvarOrcamentoApi(valor);
+      setOrcamento(config.orcamento);
+    } catch (erro) {
+      alert(erro.message);
+      return;
+    }
 
     setNovoOrcamento("");
     setMostrarOrcamentoForm(false);

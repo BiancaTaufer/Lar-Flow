@@ -11,6 +11,8 @@ import Gastos from "./pages/Gastos";
 import Configuracoes from "./pages/Configuracoes";
 import Checklist from "./pages/Checklist";
 
+import { obterConfig } from "./services/api";
+
 function App() {
   const [paginaAtual, setPaginaAtual] = useState("dashboard");
   const [categoriaInicial, setCategoriaInicial] = useState("Todos");
@@ -25,6 +27,16 @@ function App() {
   });
 
   const [dadosVersion, setDadosVersion] = useState(0);
+
+  // Busca no banco o tema salvo
+  // (o localStorage fica só como lembrança rápida para a tela não piscar)
+  useEffect(() => {
+    obterConfig()
+      .then((config) => setTema(config.tema))
+      .catch((erro) =>
+        console.error("Erro ao carregar o tema:", erro)
+      );
+  }, [dadosVersion]);
 
   useEffect(() => {
     function atualizarDados() {

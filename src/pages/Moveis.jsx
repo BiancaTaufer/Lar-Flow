@@ -8,6 +8,13 @@ import {
   FaHome,
 } from "react-icons/fa";
 
+import {
+  listarProdutos,
+  criarProduto,
+  editarProduto as editarProdutoApi,
+  excluirProduto as excluirProdutoApi,
+} from "../services/api";
+
 function Moveis({ categoriaInicial = "Todos" }) {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(categoriaInicial);
@@ -26,83 +33,23 @@ function Moveis({ categoriaInicial = "Todos" }) {
 
   const [produtoEditando, setProdutoEditando] = useState(null);
 
-  const listaInicial = [
-    { id: "sala-estar-1", nome: "Sofá", categoria: "Sala de Estar", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "sala-estar-2", nome: "Rack", categoria: "Sala de Estar", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "sala-estar-3", nome: "Painel de TV", categoria: "Sala de Estar", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "sala-estar-4", nome: "Mesa lateral", categoria: "Sala de Estar", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "sala-estar-5", nome: "Tapete", categoria: "Sala de Estar", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "sala-estar-6", nome: "Cortina", categoria: "Sala de Estar", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "sala-estar-7", nome: "Luminária", categoria: "Sala de Estar", quantidade: 1, valor: "", status: "Pendente" },
+  const [produtos, setProdutos] = useState([]);
 
-    { id: "sala-jantar-1", nome: "Mesa de jantar", categoria: "Sala de Jantar", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "sala-jantar-2", nome: "Cadeiras", categoria: "Sala de Jantar", quantidade: 6, valor: "", status: "Pendente" },
-    { id: "sala-jantar-3", nome: "Aparador", categoria: "Sala de Jantar", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "sala-jantar-4", nome: "Buffet", categoria: "Sala de Jantar", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "sala-jantar-5", nome: "Luminária pendente", categoria: "Sala de Jantar", quantidade: 1, valor: "", status: "Pendente" },
+  // =========================================================
+  // CARREGAR PRODUTOS DA API
+  // =========================================================
 
-    { id: "cozinha-1", nome: "Geladeira", categoria: "Cozinha", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "cozinha-2", nome: "Fogão", categoria: "Cozinha", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "cozinha-3", nome: "Micro-ondas", categoria: "Cozinha", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "cozinha-4", nome: "Air fryer", categoria: "Cozinha", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "cozinha-5", nome: "Cafeteira", categoria: "Cozinha", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "cozinha-6", nome: "Jogo de panelas", categoria: "Cozinha", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "cozinha-7", nome: "Louças", categoria: "Cozinha", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "cozinha-8", nome: "Talheres", categoria: "Cozinha", quantidade: 1, valor: "", status: "Pendente" },
-
-    { id: "quarto-1", nome: "Cama", categoria: "Quarto", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "quarto-2", nome: "Colchão", categoria: "Quarto", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "quarto-3", nome: "Guarda-roupa", categoria: "Quarto", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "quarto-4", nome: "Criado-mudo", categoria: "Quarto", quantidade: 2, valor: "", status: "Pendente" },
-    { id: "quarto-5", nome: "Cômoda", categoria: "Quarto", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "quarto-6", nome: "Cortina", categoria: "Quarto", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "quarto-7", nome: "Espelho", categoria: "Quarto", quantidade: 1, valor: "", status: "Pendente" },
-
-    { id: "banheiro-1", nome: "Armário", categoria: "Banheiro", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "banheiro-2", nome: "Espelho", categoria: "Banheiro", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "banheiro-3", nome: "Toalhas", categoria: "Banheiro", quantidade: 4, valor: "", status: "Pendente" },
-    { id: "banheiro-4", nome: "Tapete", categoria: "Banheiro", quantidade: 2, valor: "", status: "Pendente" },
-    { id: "banheiro-5", nome: "Porta-toalhas", categoria: "Banheiro", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "banheiro-6", nome: "Kit de banheiro", categoria: "Banheiro", quantidade: 1, valor: "", status: "Pendente" },
-
-    { id: "lavanderia-1", nome: "Máquina de lavar", categoria: "Lavanderia", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "lavanderia-2", nome: "Secadora", categoria: "Lavanderia", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "lavanderia-3", nome: "Varal", categoria: "Lavanderia", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "lavanderia-4", nome: "Cesto de roupa", categoria: "Lavanderia", quantidade: 2, valor: "", status: "Pendente" },
-    { id: "lavanderia-5", nome: "Tábua de passar", categoria: "Lavanderia", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "lavanderia-6", nome: "Armário", categoria: "Lavanderia", quantidade: 1, valor: "", status: "Pendente" },
-
-    { id: "escritorio-1", nome: "Mesa", categoria: "Escritório", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "escritorio-2", nome: "Cadeira", categoria: "Escritório", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "escritorio-3", nome: "Estante", categoria: "Escritório", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "escritorio-4", nome: "Luminária", categoria: "Escritório", quantidade: 1, valor: "", status: "Pendente" },
-    { id: "escritorio-5", nome: "Gaveteiro", categoria: "Escritório", quantidade: 1, valor: "", status: "Pendente" },
-  ];
-
-  const [produtos, setProdutos] = useState(() => {
-    const produtosSalvos = localStorage.getItem("produtos");
-
-    if (produtosSalvos) {
-      const produtosConvertidos = JSON.parse(produtosSalvos);
-
-      return produtosConvertidos.map((item) => ({
-        ...item,
-        quantidade: Number(item.quantidade) || 1,
-      }));
-    }
-
-    return listaInicial;
-  });
+  function carregarProdutos() {
+    listarProdutos()
+      .then(setProdutos)
+      .catch((erro) => console.error("Erro ao carregar produtos:", erro));
+  }
 
   useEffect(() => {
-    localStorage.setItem("produtos", JSON.stringify(produtos));
+    carregarProdutos();
+  }, []);
 
-    window.dispatchEvent(
-      new Event("larflow-data-updated")
-    );
-  }, [produtos]);
-
-  function salvarProduto(e) {
+  async function salvarProduto(e) {
     e.preventDefault();
 
     if (!produto.nome || !produto.categoria) {
@@ -130,22 +77,19 @@ function Moveis({ categoriaInicial = "Todos" }) {
       valor: produto.categoria === "Presente" ? "" : produto.valor,
     };
 
-    if (produtoEditando) {
-      const produtosAtualizados = produtos.map((item) =>
-        item.id === produtoEditando
-          ? { ...produtoParaSalvar, id: produtoEditando }
-          : item
-      );
+    try {
+      // Envia para a API (o banco gera o id do produto)
+      if (produtoEditando) {
+        await editarProdutoApi(produtoEditando, produtoParaSalvar);
+      } else {
+        await criarProduto(produtoParaSalvar);
+      }
 
-      setProdutos(produtosAtualizados);
-    } else {
-      setProdutos([
-        ...produtos,
-        { ...produtoParaSalvar, id: `produto-${Date.now()}` },
-      ]);
+      carregarProdutos();
+      limparFormulario();
+    } catch (erro) {
+      alert(erro.message);
     }
-
-    limparFormulario();
   }
 
   function editarProduto(item) {
@@ -163,14 +107,19 @@ function Moveis({ categoriaInicial = "Todos" }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function excluirProduto(id) {
+  async function excluirProduto(id) {
     const confirmar = window.confirm(
       "Tem certeza que deseja excluir este produto?"
     );
 
     if (!confirmar) return;
 
-    setProdutos(produtos.filter((item) => item.id !== id));
+    try {
+      await excluirProdutoApi(id);
+      setProdutos(produtos.filter((item) => item.id !== id));
+    } catch (erro) {
+      alert(erro.message);
+    }
   }
 
   function limparFormulario() {

@@ -14,6 +14,8 @@ import {
   FaHome,
 } from "react-icons/fa";
 
+import { listarProdutos, obterConfig } from "../services/api";
+
 function Dashboard({ onNavigate }) {
   const [produtos, setProdutos] = useState([]);
   const [filtro, setFiltro] = useState("Todos");
@@ -24,76 +26,37 @@ function Dashboard({ onNavigate }) {
 
   const produtosSectionRef = useRef(null);
 
-  const [orcamento, setOrcamento] = useState(() => {
-    return Number(
-      localStorage.getItem("orcamentoCasa") || 0
-    );
-  });
+  const [orcamento, setOrcamento] = useState(0);
 
   // =========================================================
   // CARREGAR DADOS
   // =========================================================
 
   useEffect(() => {
+    // Busca produtos e orçamento na API
     function carregarDados() {
-      const produtosSalvos =
-        localStorage.getItem("produtos");
-
-      try {
-        if (!produtosSalvos) {
-          setProdutos([]);
-        } else {
-          const produtosConvertidos =
-            JSON.parse(produtosSalvos);
-
-          if (Array.isArray(produtosConvertidos)) {
-            setProdutos(
-              produtosConvertidos.map((produto) => ({
-                ...produto,
-                quantidade:
-                  Number(produto.quantidade) || 1,
-              }))
-            );
-          } else {
-            setProdutos([]);
-          }
-        }
-      } catch (error) {
-        console.error(
-          "Erro ao carregar produtos:",
-          error
+      listarProdutos()
+        .then(setProdutos)
+        .catch((erro) =>
+          console.error("Erro ao carregar produtos:", erro)
         );
 
-        setProdutos([]);
-      }
-
-      setOrcamento(
-        Number(
-          localStorage.getItem(
-            "orcamentoCasa"
-          ) || 0
-        )
-      );
+      obterConfig()
+        .then((config) => setOrcamento(config.orcamento))
+        .catch((erro) =>
+          console.error("Erro ao carregar orçamento:", erro)
+        );
     }
 
     carregarDados();
 
-    window.addEventListener(
-      "storage",
-      carregarDados
-    );
-
+    // Recarrega quando outra tela salvar algo
     window.addEventListener(
       "larflow-data-updated",
       carregarDados
     );
 
     return () => {
-      window.removeEventListener(
-        "storage",
-        carregarDados
-      );
-
       window.removeEventListener(
         "larflow-data-updated",
         carregarDados
