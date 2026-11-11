@@ -11,81 +11,38 @@ import {
   FaBars,
 } from "react-icons/fa";
 
+import { listarProdutos, obterConfig } from "../services/api";
+
 function Header({ onNavigate, dadosVersion, onOpenSidebar }) {
   const [produtos, setProdutos] = useState([]);
   const [mostrarNotificacoes, setMostrarNotificacoes] =
     useState(false);
 
-  const [nomeUsuario, setNomeUsuario] = useState(() => {
-    return (
-      localStorage.getItem("larflowNomeUsuario") ||
-      "Bianca"
-    );
-  });
-
-  const [nomeLar, setNomeLar] = useState(() => {
-    return (
-      localStorage.getItem("larflowNomeLar") ||
-      "LarFlow"
-    );
-  });
+  const [nomeUsuario, setNomeUsuario] = useState("Bianca");
+  const [nomeLar, setNomeLar] = useState("LarFlow");
+  const [orcamento, setOrcamento] = useState(0);
 
   // =========================================================
-  // CARREGAR PRODUTOS
+  // CARREGAR DADOS DA API
+  // (roda de novo sempre que alguma tela salva algo)
   // =========================================================
 
   useEffect(() => {
-    function carregarProdutos() {
-      const produtosSalvos =
-        localStorage.getItem("produtos");
-
-      setNomeUsuario(
-        localStorage.getItem("larflowNomeUsuario") ||
-        "Bianca"
+    listarProdutos()
+      .then(setProdutos)
+      .catch((erro) =>
+        console.error("Erro ao carregar notificações:", erro)
       );
 
-      setNomeLar(
-        localStorage.getItem("larflowNomeLar") ||
-        "LarFlow"
+    obterConfig()
+      .then((config) => {
+        setNomeUsuario(config.nome_usuario);
+        setNomeLar(config.nome_lar);
+        setOrcamento(config.orcamento);
+      })
+      .catch((erro) =>
+        console.error("Erro ao carregar configurações:", erro)
       );
-
-      if (!produtosSalvos) {
-        setProdutos([]);
-        return;
-      }
-
-      try {
-        const dados = JSON.parse(produtosSalvos);
-
-        if (Array.isArray(dados)) {
-          setProdutos(dados);
-        } else {
-          setProdutos([]);
-        }
-      } catch (error) {
-        console.error(
-          "Erro ao carregar notificações:",
-          error
-        );
-
-        setProdutos([]);
-      }
-    }
-
-    carregarProdutos();
-
-    // Atualiza quando houver alteração em outra aba
-    window.addEventListener(
-      "storage",
-      carregarProdutos
-    );
-
-    return () => {
-      window.removeEventListener(
-        "storage",
-        carregarProdutos
-      );
-    };
   }, [dadosVersion]);
 
   // =========================================================
@@ -151,12 +108,6 @@ function Header({ onNavigate, dadosVersion, onOpenSidebar }) {
   // =========================================================
   // ORÇAMENTO
   // =========================================================
-
-  const orcamento = Number(
-    localStorage.getItem(
-      "orcamentoCasa"
-    ) || 0
-  );
 
   const totalGasto =
     produtosComprados

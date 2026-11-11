@@ -1,63 +1,65 @@
 
 import { useEffect, useState } from "react";
 
-const tarefasIniciais = [
-  { id: 1, titulo: "Definir o orçamento da casa", categoria: "Planejamento", concluida: false },
-  { id: 2, titulo: "Medir os ambientes", categoria: "Planejamento", concluida: false },
-  { id: 3, titulo: "Comprar os móveis essenciais", categoria: "Compras", concluida: false },
-  { id: 4, titulo: "Organizar a cozinha", categoria: "Organização", concluida: false },
-  { id: 5, titulo: "Organizar o quarto", categoria: "Organização", concluida: false },
-  { id: 6, titulo: "Conferir instalações elétricas", categoria: "Manutenção", concluida: false },
-];
+import {
+  listarTarefas,
+  criarTarefa,
+  alternarTarefa as alternarTarefaApi,
+  excluirTarefa as excluirTarefaApi,
+} from "../services/api";
 
 export default function Checklist() {
-  const [tarefas, setTarefas] = useState(() => {
-    try {
-      const salvas = localStorage.getItem("larflowChecklist");
-      return salvas ? JSON.parse(salvas) : tarefasIniciais;
-    } catch {
-      return tarefasIniciais;
-    }
-  });
+  const [tarefas, setTarefas] = useState([]);
 
   const [novaTarefa, setNovaTarefa] = useState("");
   const [categoria, setCategoria] = useState("Organização");
 
+  // Carrega as tarefas salvas no banco
   useEffect(() => {
-    localStorage.setItem("larflowChecklist", JSON.stringify(tarefas));
-  }, [tarefas]);
+    listarTarefas()
+      .then(setTarefas)
+      .catch((erro) => console.error("Erro ao carregar tarefas:", erro));
+  }, []);
 
   const concluidas = tarefas.filter((t) => t.concluida).length;
   const progresso = tarefas.length
     ? Math.round((concluidas / tarefas.length) * 100)
     : 0;
 
-  function adicionarTarefa(event) {
+  async function adicionarTarefa(event) {
     event.preventDefault();
     if (!novaTarefa.trim()) return;
 
-    setTarefas((atuais) => [
-      ...atuais,
-      {
-        id: Date.now(),
+    try {
+      const criada = await criarTarefa({
         titulo: novaTarefa.trim(),
         categoria,
-        concluida: false,
-      },
-    ]);
-    setNovaTarefa("");
+      });
+      setTarefas((atuais) => [...atuais, criada]);
+      setNovaTarefa("");
+    } catch (erro) {
+      alert(erro.message);
+    }
   }
 
-  function alternarTarefa(id) {
-    setTarefas((atuais) =>
-      atuais.map((t) =>
-        t.id === id ? { ...t, concluida: !t.concluida } : t
-      )
-    );
+  async function alternarTarefa(id) {
+    try {
+      const atualizada = await alternarTarefaApi(id);
+      setTarefas((atuais) =>
+        atuais.map((t) => (t.id === id ? atualizada : t))
+      );
+    } catch (erro) {
+      alert(erro.message);
+    }
   }
 
-  function excluirTarefa(id) {
-    setTarefas((atuais) => atuais.filter((t) => t.id !== id));
+  async function excluirTarefa(id) {
+    try {
+      await excluirTarefaApi(id);
+      setTarefas((atuais) => atuais.filter((t) => t.id !== id));
+    } catch (erro) {
+      alert(erro.message);
+    }
   }
 
   const cardStyle = {

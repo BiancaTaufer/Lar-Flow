@@ -9,6 +9,13 @@ import {
   FaGift,
 } from "react-icons/fa";
 
+import {
+  listarProdutos,
+  marcarComprado,
+  marcarPresente,
+  marcarPendente,
+} from "../services/api";
+
 function Compras() {
   const [produtos, setProdutos] = useState([]);
 
@@ -48,47 +55,32 @@ function Compras() {
   // =========================================================
 
   useEffect(() => {
-    const produtosSalvos = localStorage.getItem("produtos");
-
-    if (produtosSalvos) {
-      const produtosConvertidos = JSON.parse(produtosSalvos);
-
-      // Garante quantidade para produtos antigos
-      setProdutos(
-        produtosConvertidos.map((produto) => ({
-          ...produto,
-          quantidade: Number(produto.quantidade) || 1,
-        }))
-      );
-    }
+    listarProdutos()
+      .then(setProdutos)
+      .catch((erro) => console.error("Erro ao carregar produtos:", erro));
   }, []);
+
+  // Troca um produto da lista pela versão que a API devolveu
+  function atualizarNaLista(produtoAtualizado) {
+    setProdutos((atuais) =>
+      atuais.map((item) =>
+        item.id === produtoAtualizado.id ? produtoAtualizado : item
+      )
+    );
+  }
 
   // =========================================================
   // INICIAR COMPRA
   // =========================================================
 
-  function iniciarCompra(produto) {
+  async function iniciarCompra(produto) {
     // Se já estiver comprado, volta para pendente
     if (produto.status === "Comprado") {
-      const produtosAtualizados = produtos.map((item) =>
-        item.id === produto.id
-          ? {
-              ...item,
-              status: "Pendente",
-            }
-          : item
-      );
-
-      setProdutos(produtosAtualizados);
-
-      localStorage.setItem(
-        "produtos",
-        JSON.stringify(produtosAtualizados)
-      );
-
-      window.dispatchEvent(
-        new Event("larflow-data-updated")
-      );
+      try {
+        atualizarNaLista(await marcarPendente(produto.id));
+      } catch (erro) {
+        alert(erro.message);
+      }
 
       return;
     }
@@ -107,7 +99,7 @@ function Compras() {
   // CONFIRMAR COMPRA
   // =========================================================
 
-  function confirmarCompra() {
+  async function confirmarCompra() {
     if (!produtoSelecionado) {
       return;
     }
@@ -121,36 +113,17 @@ function Compras() {
       return;
     }
 
-    const produtosAtualizados = produtos.map((produto) =>
-      produto.id === produtoSelecionado.id
-        ? {
-            ...produto,
+    try {
+      // Presente: a API muda a categoria para "Presente" e tira o valor
+      const atualizado = presenteCompra
+        ? await marcarPresente(produtoSelecionado.id)
+        : await marcarComprado(produtoSelecionado.id, valorCompra);
 
-            status: "Comprado",
-
-            // Se for presente, não existe valor
-            valor: presenteCompra
-              ? ""
-              : valorCompra,
-
-            // Se for presente, muda a categoria
-            categoria: presenteCompra
-              ? "Presente"
-              : produto.categoria,
-          }
-        : produto
-    );
-
-    setProdutos(produtosAtualizados);
-
-    localStorage.setItem(
-      "produtos",
-      JSON.stringify(produtosAtualizados)
-    );
-
-    window.dispatchEvent(
-      new Event("larflow-data-updated")
-    );
+      atualizarNaLista(atualizado);
+    } catch (erro) {
+      alert(erro.message);
+      return;
+    }
 
     // Fecha o modal
     setProdutoSelecionado(null);
